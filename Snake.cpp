@@ -17,7 +17,7 @@ int main()
 	const auto screen_height = 30;
 	
 	auto* const screen = new wchar_t[screen_width * screen_height];
-	auto* const console_buffer = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+	auto* const console_buffer = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
 	SetConsoleActiveScreenBuffer(console_buffer);
 	DWORD bytes_written = 0;
 
@@ -31,15 +31,15 @@ int main()
 		list<position> snake = { {55,15}, {56,15}, {57,15}, {58,15}, {59,15}, {60, 15} };
 		position food = { 33, 22 };
 		auto direction = 0;
-
+		auto start_time = chrono::system_clock::now();
+		
 		while(!is_dead)
 		{
-			// Key input
 			auto t1 = chrono::system_clock::now();
-			while (std::chrono::system_clock::now() - t1 < 200ms)
+			while (std::chrono::system_clock::now() - t1 < 150ms)
 			{
-				auto pressed_right = (0x8000 & GetAsyncKeyState((unsigned char)('\x27'))) != 0;
-				auto pressed_left = (0x8000 & GetAsyncKeyState((unsigned char)('\x25'))) != 0;
+				auto pressed_right = (0x8000 & GetAsyncKeyState('\x27')) != 0;
+				auto pressed_left = (0x8000 & GetAsyncKeyState('\x25')) != 0;
 
 				if (pressed_right && !pressed_right_old)
 				{
@@ -63,9 +63,6 @@ int main()
 				pressed_left_old = pressed_left;
 			}
 			
-
-			// Game logic
-
 			position snake_head;
 			
 			// ReSharper disable once CppDefaultCaseNotHandledInSwitchStatement
@@ -85,13 +82,11 @@ int main()
 				break;
 			}
 
-			// Collision detection
 			is_dead = snake_head.x <= 0 || 
 					  snake_head.x >= screen_width || 
 					  snake_head.y <= 2 || 
 					  snake_head.y >= screen_height;
 			
-
 			if (!is_dead)
 			{
 				for (auto i : snake)
@@ -126,31 +121,20 @@ int main()
 				
 				food = position{rand_x, rand_y};
 			}
-			
-			// Rendering
 
-			// Clear screen
 			for (auto i = 0; i < screen_width * screen_height; i++) {
 				screen[i] = L' ';
 			}
 
-			// Render snake
 			for (auto i : snake) {
 				screen[i.y * screen_width + i.x] = is_dead ? L'+' : L'O';
 			}
 
 			screen[snake.front().y * screen_width + snake.front().x] = is_dead ? L'X' : L'@';
 
-			// Render food
 			screen[food.y * screen_width + food.x] = L'o';
 
-			// Render stats
-			for (auto i = 0; i < screen_width; i++)
-			{
-				screen[i] = L'=';
-				screen[2 * screen_width + i] = L'=';
-			}
-			wsprintf(&screen[screen_width], L"MOVES: %d        SCORE: %d", moves, score);
+			wsprintf(&screen[screen_width + screen_width /2 - 10/2], L"SCORE: %d", score);
 			
 			if (is_dead)
 			{
